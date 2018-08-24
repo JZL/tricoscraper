@@ -54,6 +54,14 @@ def _TricoScraper_get_course(url):
     req = requests.get(url)
     soup = bs4.BeautifulSoup(req.text, 'html.parser')
     course = {}
+    # course key -> regular expression with group 1 being value
+    # Assumes "DIST" is at the end of the line
+    additional_info_keys = {
+        'CRN': 'CRN: ([0-9]*)',
+        'ENR': 'ENR LIM: ([0-9]*)',
+        'CUR': 'CUR ENR: ([0-9]*)',
+        'DIST': 'DIST: (.*)',
+    }
     rows = soup.findChild('table').findChildren('tr')
     for row in rows:
         # The html.parser adds a closing </br> tag (against W3C spec :-( )
@@ -62,6 +70,19 @@ def _TricoScraper_get_course(url):
         row.br.unwrap()
         [key, value] = [t.text for t in row.findChildren('td')]
         course[key.strip()] = value.strip()
+
+        if key == "Additional Course Info":
+            split_info = value.strip().split("\n")
+            if len(split_info) == 0 or len(split_info) > 2:
+                raise ValueError('Course has no lines or 3+ lines in additional course info ({})'.format(url))
+            frst_val = split_info[0]
+            for k in additional_info_keys:
+                m = re.search(additional_info_keys[k], value) 
+                if m is not None:
+                    course[k] = m.group(1)
+            if len(split_info) == 2:
+                course['comment'] = split_info[1]
+
     return course
 
 
