@@ -68,6 +68,7 @@ def _TricoScraper_get_course(url):
         # which becomes the parent of the text
         row.br.insert_before("\n")
         row.br.unwrap()
+
         [key, value] = [t.text for t in row.findChildren('td')]
         course[key.strip()] = value.strip()
 
@@ -83,6 +84,7 @@ def _TricoScraper_get_course(url):
             if len(split_info) == 2:
                 course['comment'] = split_info[1]
 
+    course['URL'] = url
     return course
 
 
