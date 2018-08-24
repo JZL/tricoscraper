@@ -56,8 +56,10 @@ def _TricoScraper_get_course(url):
     course = {}
     rows = soup.findChild('table').findChildren('tr')
     for row in rows:
-        for br in row.find_all('br'):
-            br.replace_with("\n")
+        # The html.parser adds a closing </br> tag (against W3C spec :-( )
+        # which becomes the parent of the text
+        row.br.insert_before("\n")
+        row.br.unwrap()
         [key, value] = [t.text for t in row.findChildren('td')]
         course[key.strip()] = value.strip()
     return course
